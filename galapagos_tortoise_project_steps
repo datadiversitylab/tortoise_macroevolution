@@ -1,0 +1,22 @@
+Step,Method,Tool/Data
+Project Setup,Repository Creation,Nextcloud
+Data Acquisition,Phylogeny,Published Tree (Supplementary File 6)
+Data Acquisition,MLCL Data,Itescu et al. (2014), Chiari & Claude (2012) (Table S9)
+Data Preparation,Log10 Transformation,Spreadsheet/Script
+Data Preparation,Genus Aggregation,Spreadsheet/Script (Table 1)
+Data Preparation,Insularity Coding,Spreadsheet/Script (Table S6)
+Phylogenetic Analysis,PGLS Regression,R (ape, caper)
+Rate Estimation,MLE (BM/OU),R (geiger)
+Model Selection,AICc Comparison,R (geiger)
+Statistical Analysis,Correlation,R/Spreadsheet
+Statistical Analysis,Diversification Rates,Original Paper
+Visualization,Scatter Plots,R/Spreadsheet
+Hypothesis Testing,PGLS (MLCL vs Diversification),R (ape, caper)
+Hypothesis Testing,PGLS (Diversification vs Rate of Change),R (ape, caper)
+Hypothesis Testing,PGLS (MLCL vs Rate of Change),R (ape, caper)
+Hypothesis Testing,PGLS (Insularity vs MLCL),R (ape, caper)
+Hypothesis Testing,PGLS (Insularity vs Rate of Change),R (ape, caper)
+Hypothesis Testing,PGLS (Galapagos Endemics vs Rate of Change),R (ape, caper)
+Reporting,Report Writing,Word Processor
+Reporting,Table Creation,Spreadsheet/Word Processor
+Reporting,Supplementary Files,Various
