@@ -1,7 +1,7 @@
 # tortoise_macroevolution
 **DUE DATES**
-"Create first draft of the app package","January 09"
-"Send latest version of all docs to Cristian", "January 13"
+- "Create first draft of the app package","January 09"
+- "Send latest version of all docs to Cristian", "January 13"
 "Submit application package", "January 14"
 "Cristian will send the rec letter", "January 15"
 "Present Tortoise Macroevolution as Capstone Project", "January 16"
