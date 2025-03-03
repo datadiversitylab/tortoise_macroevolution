@@ -23,3 +23,13 @@ namevec <- c("mainland", "islands", "shared")
 
 # plotted them on a bar chart
 barplot(meanvec, names.arg=namevec, main="mean values of body size")
+
+# add standard deviation bars by calculating them
+stanvec <- c(sd(mainland[,4]), sd(islands[,4]), sd(shared[,4]))
+
+# https://stackoverflow.com/questions/49576344/adding-standard-deviation-to-barplot-in-r
+barCenters <- barplot(height = meanvec, names.arg=namevec,
+                      main = "mean values of body size", xlab = "Group", ylab = "bodysize", 
+                      ylim = c(0,150))
+arrows(barCenters, meanvec-stanvec,
+       barCenters, meanvec+stanvec,angle=90,code=3)
