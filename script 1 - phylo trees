@@ -1,0 +1,27 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(phytools)
+library(ape)
+library(geiger)
+```
+
+```{r}
+myTree2 <- ape::read.nexus(file="Supplementary File 2.tre")
+plotTree(myTree2,fsize = .3)
+
+```
+
+```{r}
+myTree3 <- ape::read.nexus(file="Supplementary File 3.tre")
+plotTree(myTree3,fsize= .3)
+
+```
+
+```{r}
+myTree4 <- ape::read.nexus(file="Supplementary File 4.tre")
+plotTree(myTree4, fsize=0.3)
+```
