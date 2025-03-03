@@ -17,4 +17,3 @@
 - March 28: Script 06 – rates of morphological evolution
 - April 04: Script 07 – read in all csv and tree files
 - April 11: Script 08 – fit PGLS
-- May 07: Capstone Poster/Pitch
