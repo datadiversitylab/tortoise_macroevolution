@@ -1,0 +1,25 @@
+# script 2 for the gitm: read in csv data
+
+# uploaded the data from the 2016 files into R
+distribution <- read.csv("Distribution.csv")
+bodysize <- read.csv("BodySize.csv")
+
+# merged the 2 files together into one table
+chartdf <- merge(distribution, bodysize, by="Species")
+
+# separated the merged data frame from where the tortoises lived
+mainland <- chartdf[which(chartdf[,3]==0),]
+shared <- chartdf[which(chartdf[,3]==1),]
+islands <- chartdf[which(chartdf[,3]==2),]
+
+# found the average body size in the tables 
+mean(mainland[,4])
+mean(islands[,4])
+mean(shared[,4])
+
+# created a vector (list of #s or names) for them
+meanvec <- c(mean(mainland[,4]), mean(islands[,4]), mean(shared[,4]))
+namevec <- c("mainland", "islands", "shared")
+
+# plotted them on a bar chart
+barplot(meanvec, names.arg=namevec, main="mean values of body size")
