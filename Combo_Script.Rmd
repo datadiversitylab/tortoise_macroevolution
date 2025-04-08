@@ -1,0 +1,305 @@
+---
+title: "GITM"
+output: html_document
+date: "2025-02-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(hisse) # Misse
+library(phytools)
+library(ape)
+library(geiger)
+library(ggplot2)
+library(dplyr)
+library(diversitree)
+library(BAMMtools)
+```
+```{r}
+myTree2 <- ape::read.nexus(file="Supplementary File 2.tre")
+plotTree(myTree2,fsize = .3)
+myTree3 <- ape::read.nexus(file="Supplementary File 3.tre")
+plotTree(myTree3,fsize= .3)
+myTree4 <- ape::read.nexus(file="Supplementary File 4.tre")
+plotTree(myTree4, fsize=0.3)
+```
+```{r}
+island
+```
+
+
+```{r}
+# script 2 for the gitm: read in csv data
+# uploaded the data from the 2016 files into R
+distribution <- read.csv("Distribution.csv")
+bodysize <- read.csv("BodySize.csv")
+island <- read.csv('species_island.csv', skip = 1)
+
+# merged the 2 files together into one table
+chartdf <- merge(distribution, bodysize, by="Species")
+chartdf2 <- merge(chartdf,island, by="Species")
+
+# separated the merged data frame from where the tortoises lived
+mainland <- chartdf[which(chartdf[,3]==0),]
+shared <- chartdf[which(chartdf[,3]==1),]
+islands <- chartdf[which(chartdf[,3]==2),]
+
+# created a vector (list of #s or names) for them
+meanvec <- c(mean(mainland[,4]), mean(islands[,4]), mean(shared[,4]))
+namevec <- c("mainland", "islands", "shared")
+
+# plotted them on a bar chart
+# barplot(meanvec, names.arg=namevec, main="mean values of body size")
+# 
+# stanvec <- c(sd(mainland[,4]), sd(islands[,4]), sd(shared[,4]))
+# barCenters <- barplot(height = meanvec, names.arg=namevec,
+#                       main = "mean values of body size", xlab = "Group", ylab = "bodysize", 
+#                       ylim = c(0,150))
+# arrows(barCenters, meanvec-stanvec,
+#        barCenters, meanvec+stanvec,angle=90,code=3)
+
+```
+
+# Bar errors
+```{r}
+# plotting the bars for mean with error bars for mean body length 
+# data frame for names and mean vectors
+body_loc= data.frame(namevec, meanvec)
+
+# plot the mean vector chart and add the error bars
+ggplot(body_loc, aes(x = namevec, y = meanvec)) +
+  geom_bar(fill = "darkolivegreen4", stat = 'identity')+
+  geom_errorbar(aes(ymin=meanvec-stanvec, ymax=meanvec+stanvec),
+                  width = .2, position=position_dodge(.9)) +
+  labs(y= "Mean Body Length (units)", x = "Groups", title ='Mean Values of Body Size' )
+```
+```{r}
+
+write.csv(chartdf2,'all_data.csv')
+```
+
+
+# BOX: M S I
+```{r}
+# likes the boxplot better!
+# plotting the box plots of weight by location
+chartdf2
+# create list for area
+area = c('mainland','shared','island')
+# set location in the chart to area based on index position
+chartdf2$location = area[chartdf2$Islands..multistate. +1]
+# set as a factor
+chartdf2$location = as.factor(chartdf2$location)
+# plotting box plots for body length by locations
+ggplot(chartdf2, aes(x=location, y=Carapace.length..cm.)) + 
+  geom_boxplot(fill = 'darkolivegreen4')+
+  labs(y= "Body Length (units)", x = "Groups", title ='Body Size Across Groups' )
+```
+# Violin plot
+```{r}
+#plot violin plots for the body length by location
+ggplot(chartdf2, aes(x=location, y=Carapace.length..cm.)) + 
+  geom_violin(fill = 'darkolivegreen4')+
+  labs(y= "Body Length (units)", x = "Groups", title ='Body Size Across Groups' )
+```
+# BOX: G V O
+```{r}
+galapagos = c('Other','Galapagos')
+# set location in the chart to area based on index position
+chartdf2$galapagos = galapagos[chartdf2$Galapagos..binary. +1]
+chartdf2$galapagos = as.factor(chartdf2$galapagos)
+# plotting box plots for body length by locations
+ggplot(chartdf2, aes(x=galapagos, y=Carapace.length..cm.)) + 
+  geom_boxplot(fill = 'darkolivegreen4')+
+  labs(y= "Body Length (units)", x = "Groups", title ='Body Size Across Groups' )
+```
+
+# MAP
+```{r}
+##https://r-graph-gallery.com/330-bubble-map-with-ggplot2.html
+# island locations: https://datazone.darwinfoundation.org/en/checklist/
+library(dplyr)
+justg = chartdf2 %>% filter( galapagos == 'Galapagos')
+
+latitude = c(0.615, 0.0413, -0.2877,-0.631,-1.374,-.370,-.584,-.9428)
+longitude = c(-90.79,-91.337,-90.62,-90.656,-89.659,-91.453,-90.254,-91.393)
+island_km = c(60, 4670, 572, 18, 60, 642, 986, 4670)
+  
+justg = data.frame(justg, latitude, longitude, island_km)
+
+library(ggplot2)
+library(dplyr)
+library(giscoR)
+# estimate island size google island size 
+
+Ecuador <- gisco_get_countries(country = "ECU", resolution = 1)
+ggplot() +
+  geom_sf(data = Ecuador, fill = "grey", alpha = 0.3) +
+  geom_point(data = justg, aes(x = longitude, y = latitude, size = Carapace.length..cm., color = Carapace.length..cm.), alpha = 0.7) +
+  # alpha: opacity 
+  scale_size_continuous(range = c(1, 12),name = 'Carapace Length') + # size legend
+  scale_color_viridis_c(trans = "log", name = 'Carapace Length') + # color legend
+  theme(legend.position = "right")+ # add legend
+  labs(y= "Latitude", x = "Longitude", title ='Body Length by Island')+
+  coord_sf(xlim = c(-92, -89), ylim = c(-2, 1)) # set window size
+```
+```{r}
+chartdf2 = chartdf2[c(1,2,3,4,8,9)]
+colnames(chartdf2) = c('Species','Galapagos..binary','Island..multistate','Carapace.length','Latitude.Longitude','Island.size')
+```
+
+# correlation: island X bodysize
+```{r}
+chartdf_g = chartdf2 %>% filter(Island.size > 0)
+cor( chartdf_g$Island.size,chartdf_g$Carapace.length)
+```
+```{r}
+plot(chartdf_g$Island.size, chartdf_g$Carapace.length,  xlab = 'Island Size', ylab = 'Body Length', main = 'Body Length vs Island Size')
+model <- lm(Carapace.length~ Island.size, data = chartdf_g)
+abline(model, col = "red")
+```
+```{r}
+ggplot() +
+  geom_point(data = chartdf_g, aes(x = Island.size, y = Carapace.length )) +
+  geom_abline(slope = coef(model)[["Island.size"]], 
+              intercept = coef(model)[["(Intercept)"]], color = 'darkgreen')+
+  labs(y= 'Body Length', x = 'Island Size', title ='Body Length vs Island Size' )
+```
+
+
+```{r}
+summary(model)
+```
+
+# HiSSE
+
+```{r}
+suppressWarnings(library(hisse))
+phy <- read.nexus("Supplementary File 3.tre")
+# turnover <- c(1)
+# eps <- c(1)
+# one.rate <- MiSSE(phy, f=1, turnover=turnover, eps=eps)
+# turnover <- c(1,2)
+# eps <- c(1,1)
+# two.rate <- MiSSE(phy, f=1, turnover=turnover, eps=eps)
+# #rate classes A:C
+# turnover <- c(1,2,3)
+# eps <- c(1,1,1)
+# three.rate <- MiSSE(phy, f=1, turnover=turnover, eps=eps)
+# #rate classes A:D
+# turnover <- c(1,2,3,4)
+# eps <- c(1,1,1,1)
+# four.rate <- MiSSE(phy, f=1, turnover=turnover, eps=eps)
+# #rate classes A:E
+# turnover <- c(1,2,3,4,5)
+# eps <- c(1,1,1,1,1)
+# five.rate <- MiSSE(phy, f=1, turnover=turnover, eps=eps)
+# turnover <- c(1,2)
+# eps <- c(1,2)
+# two.rate.weps <- MiSSE(phy, f=1, turnover=turnover, eps=eps)
+# 
+# #rate classes A:C, but include eps as well:
+# # turnover <- c(1,2,3)
+# # eps <- c(1,2,3)
+# # three.rate.weps <- MiSSE(phy, f=1, turnover=turnover, eps=eps)
+# 
+# one.rate.recon <- MarginReconMiSSE(phy=phy, f=1, hidden.states=1,
+# pars=one.rate$solution, n.cores=1, AIC=one.rate$AIC)
+# 
+# two.rate.recon <- MarginReconMiSSE(phy=phy, f=1, hidden.states=2,
+# pars=two.rate$solution, n.cores=1, AIC=two.rate$AIC)
+# 
+# 
+# three.rate.recon <- MarginReconMiSSE(phy=phy, f=1, hidden.states=3,
+# pars=three.rate$solution, n.cores=1, AIC=three.rate$AIC)
+# 
+# four.rate.recon <- MarginReconMiSSE(phy=phy, f=1, hidden.states=4,
+# pars=four.rate$solution, n.cores=1, AIC=four.rate$AIC)
+# 
+five.rate.recon <- marginreconmisse(phy=phy, f=1, hidden.states=5,
+pars=five.rate$solution, n.cores=1, aic=five.rate$aic)
+# 
+# load("misse.vignette.Rsave") # Line above shows the command to create this result.
+# class(two.rate.recon)
+```
+
+```{r}
+# plot.misse.states(one.rate.recon, rate.param="net.div", show.tip.label=TRUE, type="phylogram", fsize=.25, legend="none", add =TRUE )
+# plot.misse.states(two.rate.recon, rate.param="net.div", show.tip.label=TRUE, type="phylogram", fsize=.25, legend="none",add = TRUE)
+# plot.misse.states(three.rate.recon, rate.param="net.div", show.tip.label=TRUE, type="phylogram", fsize=.25, legend="none",add = TRUE)
+# plot.misse.states(four.rate.recon, rate.param="net.div", show.tip.label=TRUE, type="phylogram", fsize=.25, legend="none",add = TRUE)
+plot.misse.states(five.rate.recon, rate.param="net.div", show.tip.label=TRUE, type="phylogram", fsize=.25, legend="none",add = TRUE)
+```
+
+```{r}
+# misse.results.list = list()
+# misse.results.list[[1]] = one.rate.recon
+# misse.results.list[[2]] = two.rate.recon
+# misse.results.list[[3]] = three.rate.recon
+# misse.results.list[[4]] = four.rate.recon
+# misse.results.list[[5]] = five.rate.recon
+# 
+# turnover <- c(1,2)
+#  eps <- c(0,0)
+# 
+# two.rate <- MiSSE(phy, f=1, turnover=turnover, eps=eps, fixed.eps=0.9)
+# 
+# expected.transitions.two <- 0.004 * sum(two.rate$phy$edge.length)
+# expected.transitions.two
+# 
+# expected.transitions.three <- 0.131 * sum(three.rate$phy$edge.length)
+# expected.transitions.three
+# 
+# load("misse.support.Rsave")
+# two.rate.support$ci[,"q0"]
+# three.rate.support$ci[,"q0"]
+```
+
+```{r}
+tree <- read.nexus("Supplementary File 3.tre")
+potential.combos <- generateMiSSEGreedyCombinations(max.param=4, vary.both=TRUE)
+#run on one core:
+model.set <- MiSSEGreedy(tree, possible.combos=potential.combos, n.cores=1)
+
+#run on all available cores: (commented out because CRAN does not allow this in examples)
+#model.set <- MiSSEGreedy(phy, potential.combos, n.cores=parallel::detectCores(), f=1)
+# AICc <- unlist(lapply(result, "[[", "AICc"))
+# deltaAICc <- AICc-min(AICc)
+# print(length(result))
+# Yes, [[ is a function you can lapply, and the name of elements within each list
+# object can be arguments. Life is awesome.
+
+model.recons <- as.list(1:length(model.set))
+
+for (model_index in 1:length(model.set)) {
+nturnover <- length(unique(model.set[[model_index]]$turnover))
+neps <- length(unique(model.set[[model_index]]$eps))
+misse_recon <- MarginReconMiSSE(phy = model.set[[model_index]]$phy, f = 1,
+hidden.states = nturnover,
+pars = model.set[[model_index]]$solution,
+AIC = model.set[[model_index]]$AIC)
+model.recons[[model_index]] <- misse_recon
+}
+
+tip.rates <- GetModelAveRates(model.recons, type = c("tips"))
+```
+```{r}
+tip.rates
+write.csv(tip.rates,"tip.rates.csv")
+(myTree3$tip.label)
+
+colnames(tip.rates) = c('Species','state','turnover','net.div','speciation','extinct.frac','extinction')
+tip.rates
+```
+```{r}
+chartdf.with.rates <- merge(chartdf2, tip.rates, by="Species")
+
+chartdf.with.rates
+write.csv(chartdf.with.rates,"tip.rates.combo.csv")
+```
+
+
+
