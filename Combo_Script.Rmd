@@ -26,9 +26,6 @@ plotTree(myTree3,fsize= .3)
 myTree4 <- ape::read.nexus(file="Supplementary File 4.tre")
 plotTree(myTree4, fsize=0.3)
 ```
-```{r}
-island
-```
 
 
 ```{r}
@@ -40,6 +37,7 @@ island <- read.csv('species_island.csv', skip = 1)
 
 # merged the 2 files together into one table
 chartdf <- merge(distribution, bodysize, by="Species")
+chartdf2
 chartdf2 <- merge(chartdf,island, by="Species")
 
 # separated the merged data frame from where the tortoises lived
@@ -77,7 +75,6 @@ ggplot(body_loc, aes(x = namevec, y = meanvec)) +
   labs(y= "Mean Body Length (units)", x = "Groups", title ='Mean Values of Body Size' )
 ```
 ```{r}
-
 write.csv(chartdf2,'all_data.csv')
 ```
 
@@ -90,7 +87,7 @@ chartdf2
 # create list for area
 area = c('mainland','shared','island')
 # set location in the chart to area based on index position
-chartdf2$location = area[chartdf2$Islands..multistate. +1]
+chartdf2$location = area[(chartdf2$Islands..multistate..x +1)]
 # set as a factor
 chartdf2$location = as.factor(chartdf2$location)
 # plotting box plots for body length by locations
@@ -122,8 +119,10 @@ ggplot(chartdf2, aes(x=galapagos, y=Carapace.length..cm.)) +
 ##https://r-graph-gallery.com/330-bubble-map-with-ggplot2.html
 # island locations: https://datazone.darwinfoundation.org/en/checklist/
 library(dplyr)
-justg = chartdf2 %>% filter( galapagos == 'Galapagos')
-
+library(plotly)
+chartdf2
+justg = chartdf2 %>% filter( Galapagos..binary. == 1)
+justg
 latitude = c(0.615, 0.0413, -0.2877,-0.631,-1.374,-.370,-.584,-.9428)
 longitude = c(-90.79,-91.337,-90.62,-90.656,-89.659,-91.453,-90.254,-91.393)
 island_km = c(60, 4670, 572, 18, 60, 642, 986, 4670)
@@ -136,7 +135,7 @@ library(giscoR)
 # estimate island size google island size 
 
 Ecuador <- gisco_get_countries(country = "ECU", resolution = 1)
-ggplot() +
+x = ggplot() +
   geom_sf(data = Ecuador, fill = "grey", alpha = 0.3) +
   geom_point(data = justg, aes(x = longitude, y = latitude, size = Carapace.length..cm., color = Carapace.length..cm.), alpha = 0.7) +
   # alpha: opacity 
@@ -145,6 +144,8 @@ ggplot() +
   theme(legend.position = "right")+ # add legend
   labs(y= "Latitude", x = "Longitude", title ='Body Length by Island')+
   coord_sf(xlim = c(-92, -89), ylim = c(-2, 1)) # set window size
+ggplotly(x)
+x
 ```
 ```{r}
 chartdf2 = chartdf2[c(1,2,3,4,8,9)]
