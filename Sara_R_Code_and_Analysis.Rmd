@@ -1,0 +1,231 @@
+---
+title: "GITM"
+output: html_document
+date: "2025-02-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Library Imports
+```{r}
+library(hisse) # Misse
+library(phytools)
+library(ape)
+#library(geiger)
+library(ggplot2)
+library(dplyr)
+library(giscoR)
+#library(diversitree)
+#library(BAMMtools)
+```
+
+# Reading in Tree Data
+```{r}
+myTree2 <- read.nexus(file="Supplementary File 2.tre")
+plotTree(myTree2,fsize = .3)
+myTree3 <- read.nexus(file="Supplementary File 3.tre")
+plotTree(myTree3,fsize= .3)
+myTree4 <- read.nexus(file="Supplementary File 4.tre")
+plotTree(myTree4, fsize=0.3)
+```
+
+```{r}
+# some code sourced from Paige Cherry in this code chunk
+# uploaded the data from the 2016 files into R
+distribution <- read.csv("Distribution.csv")
+bodysize <- read.csv("BodySize.csv")
+# uploaded (sara) my research data about islands
+island <- read.csv('SpeciesIsland.csv', skip = 1)
+
+# merged distribution and island size
+chartdf <- merge(distribution, bodysize, by="Species")
+chartdf2 <- merge(chartdf,island, by="Species")
+
+# separated the merged data frame from where the tortoises lived
+#mainland <- chartdf[which(chartdf[,3]==0),]
+#shared <- chartdf[which(chartdf[,3]==1),]
+#islands <- chartdf[which(chartdf[,3]==2),]
+
+# created a vector (list of #s or names) for them
+#meanvec <- c(mean(mainland[,4]), mean(islands[,4]), mean(shared[,4]))
+#namevec <- c("mainland", "islands", "shared")
+
+# plotted them on a bar chart
+# barplot(meanvec, names.arg=namevec, main="mean values of body size")
+# 
+#stanvec <- c(sd(mainland[,4]), sd(islands[,4]), sd(shared[,4]))
+# barCenters <- barplot(height = meanvec, names.arg=namevec,
+#                       main = "mean values of body size", xlab = "Group", ylab = "bodysize", 
+#                       ylim = c(0,150))
+# arrows(barCenters, meanvec-stanvec,
+#        barCenters, meanvec+stanvec,angle=90,code=3)
+
+```
+
+writing out the chart for Hubert for website will add the tip rates on later and write out again
+```{r}
+write.csv(chartdf2,'all_data.csv')
+```
+
+
+# BOXPLOT: original data distribution
+Mainland, Shared, Island
+plotting the box plots of weight by location
+```{r}
+# create list for area
+area = c('mainland','shared','island')
+# set location in the chart to area based on index position
+chartdf2$location = area[(chartdf2$Islands..multistate..x +1)]
+# set as a factor
+chartdf2$location = as.factor(chartdf2$location)
+# plotting box plots for body length by locations
+ggplot(chartdf2, aes(x=location, y=Carapace.length..cm.)) + 
+  geom_boxplot(fill = '#42a5f5')+
+  labs(y= "Body Length (cm)", x = "Groups", title ='Body Size Across Groups' )
+```
+# Violin plot: original data
+same plot as above visualized differently 
+did not end up getting used on the website or poster
+```{r}
+#plot violin plots for the body length by location
+ggplot(chartdf2, aes(x=location, y=Carapace.length..cm.)) + 
+  geom_violin(fill = '#66bb6a')+
+  labs(y= "Body Length (units)", x = "Groups", title ='Body Size Across Groups' )
+```
+# BOX: Galapagos vs. Other
+sorted out data by Galapagos and other region to plot box plot
+this gives support to the fact that the Galapagos tortoises are large and give background 
+context to the island plot by showing that the Galapagos tortoises plotted are larger 
+than most other species
+```{r}
+galapagos = c('Other','Galapagos')
+# set location in the chart to area based on index position
+chartdf2$galapagos = galapagos[chartdf2$Galápagos..binary..y +1]
+chartdf2$galapagos = as.factor(chartdf2$galapagos)
+# plotting box plots for body length by locations
+ggplot(chartdf2, aes(x=galapagos, y=Carapace.length..cm.)) + 
+  geom_boxplot(fill = '#66bb6a')+
+  labs(y= "Body Length (cm)", x = "Groups", title ='Body Size Across Groups' )
+```
+
+# MAP
+```{r}
+## https://r-graph-gallery.com/330-bubble-map-with-ggplot2.html
+#island locations: https://datazone.darwinfoundation.org/en/checklist/
+
+colnames(chartdf2) = c('Species','Galapagos..binary',"Islands..multistate","Carapace.length.cm." ,"Reference" ,"Galápagos..binary." ,"Islands..multistate..y", "Latitude","Longitude", "Island.Size..km.2." ,"Island.location.")
+
+chartdf2$Latitude = as.double(chartdf2$Latitude)
+chartdf2$Longitude = as.double(chartdf2$Longitude)
+str(chartdf2)
+justg = chartdf2[chartdf2$Galapagos..binary == 1,]
+
+Ecuador <- gisco_get_countries(country = "ECU", resolution = 1)
+g_plot = ggplot() +
+  geom_sf(data = Ecuador, fill = "grey", alpha = 0.3) +
+  geom_point(data = justg, 
+             aes(x = Longitude, y = Latitude, size = Carapace.length.cm., color = Carapace.length.cm.),
+             alpha = 0.7) + # alpha: opacity 
+  scale_size_continuous(range = c(1, 12),name = 'Carapace Length (cm)') + # size legend
+  scale_color_viridis_c(trans = "log", name = 'Carapace Length (cm)') + # color legend
+  theme(legend.position = "right")+ # add legend
+  labs(y= "Latitude", x = "Longitude", title ='Body Length by Island')+
+  coord_sf(xlim = c(-92, -89), ylim = c(-2, 1)) # set window size
+
+# set hover text
+justg$hover_text <- paste("Species: ",justg$Species, "<br>Carapace Length: ", justg$Carapace.length.cm.)
+# set plotly parameters:
+plotly_galapagos <- ggplotly(g_plot) %>%
+  style(
+    hoverinfo = "text",  
+    text = justg$hover_text )
+
+plotly_galapagos
+
+g_plot
+
+library(htmlwidgets)
+saveWidget(plotly_galapagos, "i_map_galapagos.html")
+```
+
+
+# correlation: island X bodysize
+```{r}
+chartdf_g = chartdf2[chartdf2$Island.Size..km.2. >0,]
+cor(chartdf_g$Island.Size..km.2.,chartdf_g$Carapace.length)
+```
+# Linear Regression:
+body size vs island size
+```{r}
+model = lm(Carapace.length.cm.~Island.Size..km.2., data = chartdf_g)
+ggplot() +
+  geom_point(data = chartdf_g, aes(x = Island.Size..km.2., y = Carapace.length.cm. )) +
+  geom_abline(slope = coef(model)[["Island.Size..km.2."]], 
+              intercept = coef(model)[["(Intercept)"]], color = 'darkgreen')+
+  labs(y= 'Body Length', x = 'Island Size  (Km sq.)', title ='Body Length vs Island Size' )
+```
+# Model Summary
+```{r}
+summary(model)
+```
+# HiSSE
+```{r}
+suppressWarnings(library(hisse))
+phy <- read.nexus("Supplementary File 3.tre")
+
+five.rate.recon <- marginreconmisse(phy=phy, f=1, hidden.states=5,
+pars=five.rate$solution, n.cores=1, aic=five.rate$aic)
+```
+
+```{r}
+plot.misse.states(five.rate.recon, rate.param="net.div", show.tip.label=TRUE, type="phylogram", fsize=.25, legend="none",add = TRUE)
+```
+
+```{r}
+tree <- read.nexus("Supplementary File 3.tre")
+potential.combos <- generateMiSSEGreedyCombinations(max.param=4, vary.both=TRUE)
+# running on one core slow but multiple would not work 
+model.set <- MiSSEGreedy(tree, possible.combos=potential.combos, n.cores=1)
+
+model.recons <- as.list(1:length(model.set))
+
+for (model_index in 1:length(model.set)) {
+nturnover <- length(unique(model.set[[model_index]]$turnover))
+neps <- length(unique(model.set[[model_index]]$eps))
+misse_recon <- MarginReconMiSSE(phy = model.set[[model_index]]$phy, f = 1,
+hidden.states = nturnover,
+pars = model.set[[model_index]]$solution,
+AIC = model.set[[model_index]]$AIC)
+model.recons[[model_index]] <- misse_recon
+}
+
+tip.rates <- GetModelAveRates(model.recons, type = c("tips"))
+```
+
+
+```{r}
+write.csv(tip.rates,"tip.rates.csv")
+(myTree3$tip.label)
+# diversification = speciation - extinction rate
+# extinction rate the same so truly a difference is speciation
+colnames(tip.rates) = c('Species','state','turnover','net.div','speciation','extinct.frac','extinction')
+tip.rates
+```
+
+```{r}
+#Merge data together
+chartdf.with.rates <- merge(chartdf2, tip.rates, by="Species")
+# write out for Hubert
+chartdf.with.rates
+write.csv(chartdf.with.rates,"tip.rates.combo.csv")
+```
+```{r}
+# average rates for Galapagos
+mean(tip.rates[20:30,]$net.div)
+# average rates for not Galapagos 
+mean(tip.rates[-(20:30),]$net.div)
+```
+
+
+
