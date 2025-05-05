@@ -1,0 +1,39 @@
+# Load required libraries
+
+library(ape)
+
+library(phytools) 
+
+
+# Set working directory
+
+setwd("C:/Users/paige/OneDrive/Desktop/eco-info/2016 data")
+ 
+
+# Read tree and trait data
+
+tree <- read.nexus("Supplementary_File_2.tre")
+
+trait_data <- read.csv("BodySize.csv", row.names = 1)
+ 
+
+# Prepare trait vector
+
+trait_vector <- setNames(trait_data$Carapace.length..cm., rownames(trait_data))
+ 
+
+# Compute branch-length transformations
+
+scaled_tree <- chronos(tree, lambda = 1)
+ 
+
+# Estimate trait evolution rates
+
+rate_estimates <- fastBM(scaled_tree, sig2 = var(trait_vector, na.rm = TRUE))
+
+
+# Output results
+
+print(rate_estimates)
+
+summary(rate_estimates)
